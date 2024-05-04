@@ -1,2 +1,102 @@
 # type-spec
- A minimalist approach to implementing dynamic type systems in JavaScript
+
+`type-spec` is designed to be a lightweight, dynamic type enforcement system for JavaScript. It represents types as object literals with constrained properties, allowing for the definition, instantiation, and validation of custom types with clear structural and behavioral constraints. Once properties are defined, they cannot be redefined, ensuring consistent and dependable type behavior.
+
+**Key Features:**
+- **Type Definition and Instantiation**: Define types using a simple class structure that allows specifying property constraints, default values, and validation rules.
+- **Dynamic Type Checking**: Enforce type constraints at runtime, ensuring that objects adhere to the predefined specifications, with comprehensive error handling for type violations.
+- **Immutability and State Management**: Facilitates creating, updating, and managing instances of types in an immutable fashion, promoting safer and more predictable code.
+- **Customizable and Extensible**: Easily extend types and integrate custom validation logic to suit complex application needs.
+
+**Use Cases:**
+- Ideal for applications requiring robust state management and type integrity without the overhead of static typing languages.
+- Useful in scenarios where dynamic type checking can prevent common bugs and ensure data consistency across components.
+
+
+## Examples
+
+Here are some examples of how to use the `TypeSpec` class to define and validate type specifications for different scenarios. These examples help illustrate how to create types, define properties, and utilize instances effectively:
+
+### Defining a Simple User Type
+
+In this example, we'll define a simple `User` type with properties `username` and `age`. We'll ensure that the `username` is a non-empty string and `age` is a positive integer.
+
+```javascript
+import TypeSpec from './TypeSpec';
+import TypeSpecError from 'type-spec-error';
+
+const User = new TypeSpec('User')
+    .prop('username', value => typeof value === 'string' && value.length > 0, 'defaultUser')
+    .prop('age', value => typeof value === 'number' && value > 0, 18);
+
+// Creating an instance of User:
+try {
+    const userInstance = User.create({ username: 'johndoe', age: 30 });
+    console.log('User created:', userInstance);
+} catch (error) {
+    console.error(error.message);
+}
+
+// Attempting to create a user with invalid data:
+try {
+    const invalidUser = User.create({ username: '', age: -5 });
+} catch (error) {
+    console.error(error.message);  // Should output error messages for invalid username and age
+}
+```
+
+### Enforcing Required Properties
+
+This example shows how to define a type where some properties are required and others have default values.
+
+```javascript
+const Book = new TypeSpec('Book')
+    .prop('title', value => typeof value === 'string' && value.length > 0)
+    .prop('author', value => typeof value === 'string' && value.length > 0)
+    .prop('year', value => typeof value === 'number' && value >= 0, 2021);
+
+// Creating a book with all properties provided:
+try {
+    const bookInstance = Book.create({ title: '1984', author: 'George Orwell', year: 1949 });
+    console.log('Book created:', bookInstance);
+} catch (error) {
+    console.error(error.message);
+}
+
+// Creating a book with default year:
+try {
+    const bookDefaultYear = Book.create({ title: 'Brave New World', author: 'Aldous Huxley' });
+    console.log('Book created with default year:', bookDefaultYear);
+} catch (error) {
+    console.error(error.message);
+}
+```
+
+### Updating an Instance
+
+This example demonstrates updating an instance of a defined type while validating the new properties.
+
+```javascript
+const Product = new TypeSpec('Product')
+    .prop('name', value => typeof value === 'string')
+    .prop('price', value => typeof value === 'number' && value >= 0, 0);
+
+// Creating a product instance:
+let productInstance = Product.create({ name: 'Laptop', price: 999 });
+console.log('Initial product:', productInstance);
+
+// Updating the product's price:
+try {
+    productInstance = Product.update(productInstance, { price: 1099 });
+    console.log('Updated product:', productInstance);
+} catch (error) {
+    console.error(error.message);
+}
+
+// Attempting to update with invalid data:
+try {
+    productInstance = Product.update(productInstance, { price: -50 });
+} catch (error) {
+    console.error('Error:', error.message);  // Should output an error message for invalid price
+}
+```

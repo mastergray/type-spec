@@ -1,0 +1,30 @@
+{
+  "name": "type-spec",
+  "version": "0.0.1-alpha",
+  "description": "A minimalist approach to implementing dynamic types in JavaScript",
+  "main": "./src/index.js",
+  "type":"module",
+  "scripts": {
+    "staging": "nodemon --watch ./ -e js,json,ts ./test/index.js"
+  },
+  "nodemonConfig": {
+    "ignore": ["node_modules/**/*"]
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mastergray/type-spec.git"
+  },
+  "keywords": [
+    "Type Checking",
+    "Dynamic Types"
+  ],
+  "bugs": {
+    "url": "https://github.com/mastergray/type-spec/issues"
+  },
+  "author": "mastergray",
+  "license": "MIT",
+  "homepage": "https://github.com/mastergray/type-spec#readme",
+  "devDependencies": {
+    "nodemon": "^3.1.0"
+  }
+}
