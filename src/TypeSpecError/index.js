@@ -54,19 +54,19 @@ export default class TypeSpecError extends Error {
     // :: STRING, STRING -> typeSpecError
     // For handling error when a property of of an instance is missing:
     static MISSING_PROP(typeName, propName) {
-        return new TypeSpecError(`Property "${propName}" is missing from instance of type-spec "${typeName}"`, TypeSpecError.CODE.MISSING_PROPERTY);
+        return new TypeSpecError(`Property "${propName}" is missing from instance of TYPESPEC "${typeName}"`, TypeSpecError.CODE.MISSING_PROPERTY);
     }
 
     // :: STRING, STRING -> typeSpecError
     // For handling error when the property of an instance is not of the correct type:
     static INVALID_PROP(typeName, propName) {
-        return new TypeSpecError(`Property "${propName}" is of incorrect type for instance of type-spec "${typeName}"`, TypeSpecError.CODE.INVALID_PROPERTY_TYPE);
+        return new TypeSpecError(`Property "${propName}" is of incorrect type for instance of TYPESPEC "${typeName}"`, TypeSpecError.CODE.INVALID_PROPERTY_TYPE);
     }
 
     // :: STRING, STRING -> TypeSpecError
     // For handling error when the property of an instance if not supported by the given type:
     static UNSUPPORTED_PROP(typeName, propName) {
-        return new TypeSpecError(`Property "${propName}" is not supported by type-spec "${typeName}"`, TypeSpecError.CODE.UNSUPPORTED_PROPERTY);
+        return new TypeSpecError(`Property "${propName}" is not supported by TYPESPEC "${typeName}"`, TypeSpecError.CODE.UNSUPPORTED_PROPERTY);
     }
 
     // :: STRING, STRING -> typeSpecError

@@ -1,6 +1,6 @@
 {
   "name": "type-spec",
-  "version": "0.0.1-alpha",
+  "version": "0.0.2-alpha",
   "description": "A minimalist approach to type checking in JavaScript",
   "main": "./src/index.js",
   "type":"module",

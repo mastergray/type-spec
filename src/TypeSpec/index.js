@@ -4,17 +4,19 @@ import TypeSpecError from "../TypeSpecError/index.js";
 export default class TypeSpec {
 
     // Instance Fields:
-    _typeName;    // Store name of type
-    _props = {};  // Store supported properties of type
+    _typeName;      // Store name of type
+    _props = {};    // Store supported properties of type
+    _parentType;    // Stores parent type of this type
 
-    // CONSTRUCTOR :: STRING -> this
-    constructor(typeName) {
+    // CONSTRUCTOR :: STRING, TYPESPEC|VOID -> this
+    constructor(typeName, parentType) {
         this.typeName = typeName;
+        this.parentType = parentType;
     }
 
     /**
      * 
-     *  Properteries 
+     *  Properties 
      * 
      */
 
@@ -47,8 +49,32 @@ export default class TypeSpec {
     }
 
     // GETTER :: VOID -> OBJECT
+    // NOTE: // We do a shallow copy of parent type properties to check against while also overwriting any of those properties if defined for a subtype
     get props() {
-        return this._props;
+        return this.parentType !== undefined
+            ? Object.assign({}, this.parentType.props, this._props) 
+            : this._props;
+    }
+
+    /*============*
+     * parentType *
+     *============*/
+
+    // SETTER :: TYPESPEC -> VOID
+    set parentType(parentType) {
+        if (parentType !== undefined) {
+            if (parentType instanceof TypeSpec) {
+                this._parentType = parentType;
+            } else {
+                throw new TypeSpecError(`Parent type of "${this.typeName} must be an instance of TypeSpec`, TypeSpecError.CODE.INVALID_VALUE);
+            }
+        }
+
+    }
+
+    // GETTER :: VOID -> TYPESPEC
+    get parentType() {
+        return this._parentType;
     }
 
     /**
@@ -78,15 +104,22 @@ export default class TypeSpec {
             throw new TypeSpecError("Default value is not valid for given predicate", TypeSpecError.CODE.INVALID_VALUE);
         }
 
-
-        this.props[name] = {
-            "typeName":this.typeName,
-            "check":pred,
+        // Property "definition" of the type:
+        // NOTE: We directly update _props since the getter returns both this instance's props as well as it's parent's properties
+        this._props[name] = {
+            "typeName":this.typeName,              // This is used to determine if we can overwrite the property or not
+            "check":pred,                          // The function we are using to validate with
             "required":defaultValue === undefined, // A property is "required" only if no default is given
-            "defaultValue":defaultValue
+            "defaultValue":defaultValue            // What to use if no value is given at initialization
         };
 
         return this;
+    }
+
+    // :: STRING, * -> this
+    // Set explicit value for property that's immutable:
+    constant(name, value) {
+        return this.prop(name, arg=> TypeSpec.isEqual(value, arg), value);
     }
 
     // :: OBJECT -> OBJECT
@@ -136,7 +169,7 @@ export default class TypeSpec {
 
         // Ensure instance we are checking is an OBJECT:
         if (TypeSpec.OBJECT(args) === false) {
-            throw new TypeSpecError(`Must intialize instance of type-spec "${this.typeName}" using OBJECT`, TypeSpecError.CODE.INVALID_VALUE);
+            throw new TypeSpecError(`Must intialize instance of TYPESPEC "${this.typeName}" using OBJECT`, TypeSpecError.CODE.INVALID_VALUE);
         }
 
         // Intializes instance with set default values:
@@ -156,7 +189,7 @@ export default class TypeSpec {
                 throw TypeSpecError.MISSING_PROP(this.typeName, name);
             }
 
-            // Bind vlaue to name of result if check is sucsseful, otherswise throw an error:
+            // Bind value to name of result if check is sucsseful, otherswise throw an error:
             if (definition.check(value) === true) {
                 result[name] = value;
                 return result;
@@ -165,8 +198,7 @@ export default class TypeSpec {
             // Otherwise throw an exception if check fails:
             throw TypeSpecError.INVALID_PROP(this.typeName, name);
           
-        }, this.parentType !== undefined ? this.parentType.create(args) : {});
-        // This works becasuse "create" ignores properties that aren't defined
+        }, {});
     }
 
     // :: OBJECT, OBJECT -> OBJECT
@@ -200,16 +232,28 @@ export default class TypeSpec {
      * 
      */
 
-    // Static Factory Method :: STRING -> typeSpec
-    static init(typeName) {
-        return new TypeSpec(typeName);
+    // Static Factory Method :: STRING, TYPESPEC|VOID -> typeSpec
+    static init(typeName, parentType) {
+        return new TypeSpec(typeName, parentType);
     }
 
     // :: * -> BOOL
     // Returns TRUE if value is type STRING, otherwise returns FALSE:
     static STRING(value) {
         return typeof(value) === "string";
-    }    
+    }
+    
+    // :: * -> BOOL
+    // Returns TRUE if value is type STRING, but is more than just whitespace - otherwise returns FALSE:
+    static NONEMPTY_STRING(value) {
+        return TypeSpec.STRING && value.trim().length > 0;
+    }
+
+    // :: * -> BOOL
+    // Returns TRUE if value is type NUMBER, otherwise returns FALSE:
+    static NUMBER(value) {
+        return typeof(value) === "number";
+    }
 
     // :: * -> BOOL
     // Returns TRUE if value is type FUNCTION, otherwise returns FALSE:
@@ -220,7 +264,66 @@ export default class TypeSpec {
     // :: * -> BOOL
     // Returns TRUE if value is type OBJECT, otherwise returns FALSE: 
     static OBJECT(value) {
-        return value !== null && typeof(value) === "object";
+        return value !== null && typeof value === 'object' && !Array.isArray(value);
+    }
+
+    // :: * -> BOOL
+    // Returns TRUE if value is an ARRAY, otherwise returns FALSE:
+    static ARRAY(value) {
+        return Array.isArray(value);
+    }
+
+    // Returns TRUE if both values are equal, otherwise returns FALSE:
+    // NOTE: This is restricted to equality between primitive values, OBJECTs, ARRAYs of primitive values, and ARRAYs of OBJECTs:
+    static isEqual(a,b) {
+
+        // Compare arrays:
+        if (TypeSpec.ARRAY(a) && TypeSpec.ARRAY(b)) {
+            
+            // Checks fails if arrays are of different length:
+            if (a.length !== b.length) {
+                return false;
+            }
+            
+            // Recursively compare array elements:
+            for (let i = 0; i < a.length; i++) {             
+                if (!TypeSpec.isEqual(a[i], b[i]))  {
+                    return false;
+                }
+            }
+
+            // Returns TRUE if everything is "equal":
+            return true;
+
+        }
+
+        // Compare objects:
+        if (TypeSpec.OBJECT(a) && TypeSpec.OBJECT(b)) {
+            
+            // Get property names for comparing with:
+            const aPropNames = Object.keys(a);
+            const bPropNames = Object.keys(b);
+            
+            // Check fails if number of property names are differnt:
+            if (aPropNames.length !== bPropNames.length) {
+                return false;
+            }
+
+            // Recursively compare object properties:
+            for (const propName of aPropNames) {
+                if (!bPropNames.includes(propName) || !TypeSpec.isEqual(a[propName], b[propName])) {
+                    return false
+                }
+            }
+
+             // Returns TRUE if everything is "equal":
+             return true;
+
+        }
+
+        // Otherwise compare primitive values:
+        return a === b;
+
     }
 
 }
