@@ -1,4 +1,4 @@
-## TypeSpec Class Documentation
+### TypeSpec Class Documentation
 
 ### Description
 The `TypeSpec` class implements a rudimentary type system by representing instances of a "type" as object literals with constrained properties. This class allows for defining properties with specific constraints and validation rules, ensuring that instances adhere to these specifications. It supports dynamic inheritance from parent types, enabling subtypes to override and extend parent properties.
@@ -23,13 +23,19 @@ The `TypeSpec` class implements a rudimentary type system by representing instan
 #### `props`
 - **Type**: `Object`
 - **Accessors**:
-  - `get props()`: Retrieves the properties of the type. Merges properties with those from the parent type if available, with subtype properties overriding those of the parent type.
+  - `set props(props: Object)`: Sets the properties for this type, overriding any from the parent type.
+  - `get props()`: Retrieves the properties of the type. Does not include properties from the parent type.
 
 #### `parentType`
 - **Type**: `TypeSpec`
 - **Accessors**:
   - `set parentType(parentType: TypeSpec)`: Sets the parent type, verifying that it is an instance of `TypeSpec`.
   - `get parentType()`: Retrieves the current parent type.
+
+#### `propNames`
+- **Type**: `Set<string>`
+- **Accessor**:
+  - `get propNames()`: Retrieves a set of all property names defined for this type, including those inherited from the parent type.
 
 ### Methods
 
@@ -48,6 +54,12 @@ The `TypeSpec` class implements a rudimentary type system by representing instan
 - **Returns**: The `TypeSpec` instance, facilitating method chaining.
 - **Description**: Sets a property to a constant value, ensuring that all instances of this type will hold this exact value for the specified property.
 
+#### `propDefinition(name: string): Object`
+- **Parameters**:
+  - `name`: The name of the property to retrieve.
+- **Returns**: The property definition object.
+- **Description**: Retrieves the definition of a property by name, checking in the current type's properties and recursively in the parent type if necessary.
+
 #### `check(instance: Object): Object`
 - **Parameters**:
   - `instance`: An object literal representing an instance to validate against the defined type properties.
@@ -60,10 +72,10 @@ The `TypeSpec` class implements a rudimentary type system by representing instan
 - **Returns**: A newly created instance object.
 - **Description**: Creates a new instance using provided values and default values, validating properties during creation.
 
-#### `update(instance: Object, props: Object): Object`
+#### `update(instance: Object, newProps: Object): Object`
 - **Parameters**:
   - `instance`: The original instance object.
-  - `props`: New property values for updating the instance.
+  - `newProps`: New property values for updating the instance.
 - **Returns**: An updated instance object.
 - **Description**: Updates an instance with new properties, validating new values. Encourages immutability by returning a new object instead of modifying the original.
 
@@ -88,9 +100,7 @@ The `TypeSpec` class implements a rudimentary type system by representing instan
 - **Returns**: `true` if the value is a function, otherwise `false`.
 - **Description**: Checks if a value is a function.
 
-#### `OBJECT(value: any): boolean
-
-`
+#### `OBJECT(value: any): boolean`
 - **Parameters**:
   - `value`: The value to check.
 - **Returns**: `true` if the value is an object (and not `null`), otherwise `false`.
