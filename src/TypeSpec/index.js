@@ -4,7 +4,8 @@ import TypeSpecError from "../TypeSpecError/index.js"; // For handling errors th
 //  Implements a rudimentary "type system" that represents instance of a "type" as an  object literal with constrained properties:
 export default class TypeSpec {
 
-    // Instance Fields:
+    /* Instance Fields */
+    
     _typeName;      // Store name of type
     _props = {};    // Stores supported properties of type
     _parentType;    // Stores parent type of this type
@@ -27,7 +28,7 @@ export default class TypeSpec {
 
     // SETTER :: STRING -> VOID
     set typeName (typeName) {
-        if (TypeSpec.STRING(typeName) === true) {
+        if (TypeSpec.NONEMPTY_STRING(typeName) === true) {
             this._typeName = typeName;
         } else {
            throw TypeSpecError.INVALID_VALUE("Type Name", "STRING");
@@ -59,19 +60,16 @@ export default class TypeSpec {
      * parentType *
      *============*/
 
-    // SETTER :: TYPESPEC -> VOID
+    // SETTER :: TYPESPEC|VOID -> VOID
     set parentType(parentType) {
-        if (parentType !== undefined) {
-            if (parentType instanceof TypeSpec) {
-                this._parentType = parentType;
-            } else {
-                throw new TypeSpecError(`Parent type of "${this.typeName} must be an instance of TypeSpec`, TypeSpecError.CODE.INVALID_VALUE);
-            }
+        if (parentType !== undefined  && !(parentType instanceof TypeSpec)) {
+            throw new TypeSpecError(`Parent type of "${this.typeName} must be an instance of TypeSpec`, TypeSpecError.CODE.INVALID_VALUE); 
         }
+        this._parentType = parentType;
 
     }
 
-    // GETTER :: VOID -> TYPESPEC
+    // GETTER :: VOID -> TYPESPEC|VOID
     get parentType() {
         return this._parentType;
     }
@@ -171,10 +169,10 @@ export default class TypeSpec {
     // :: OBJECT -> OBJECT
     // Returns given value if valid for stored props - otherwise throws an error
     check(instance) {
-        
+      
         // Ensure instance we are checking is an OBJECT:
         if (TypeSpec.OBJECT(instance) === false || instance instanceof TypeSpec) {
-            throw new TypeSpecError(`Must check instance of type-spec "${this.typeName}" using OBJECT`, TypeSpecError.CODE.INVALID_VALUE);
+            throw new TypeSpecError(`Must check instance of TYPESPEC "${this.typeName}" using OBJECT`, TypeSpecError.CODE.INVALID_VALUE);
         }
 
         // Stores names so we can insure instance we checking only includes all properties of a type
@@ -296,6 +294,24 @@ export default class TypeSpec {
     }
 
     // :: * -> BOOL
+    // Returns TRUE if value is a BOOL, otherwise returns FALSE:
+    static BOOL(value) {
+        return typeof(value) === 'boolean';
+    }
+
+    // :: * -> BOOL
+    // Return TRUE if value is UNDEFINED, otherwise retuns FALSE:
+    static VOID(value) {
+        return typeof value === 'undefined';
+    }
+
+    // :: * -> BOOL 
+    // Returns TRUE is value is NULL, otherwise returns FALSE:
+    static NOTHING(value) {
+        return value === null;
+    }
+
+    // :: * -> BOOL
     // Returns TRUE if value is type STRING, otherwise returns FALSE:
     static STRING(value) {
         return typeof(value) === "string";
@@ -314,6 +330,18 @@ export default class TypeSpec {
     }
 
     // :: * -> BOOL
+    // Returns TURE if value is an integer, otherwise returns false:
+    static INT(value) {
+        return Number.isInteger(value);
+    }
+
+    // :: * -> BOOL
+    // Returns TRUE if value is a non-negative integer:
+    static UNSIGNED_INT(value) {
+        return TypeSpec.INT(value) && value >= 0;
+    }
+
+    // :: * -> BOOL
     // Returns TRUE if value is type FUNCTION, otherwise returns FALSE:
     static FUNCTION(value) {
         return typeof(value) === "function";
@@ -322,13 +350,40 @@ export default class TypeSpec {
     // :: * -> BOOL
     // Returns TRUE if value is type OBJECT, otherwise returns FALSE: 
     static OBJECT(value) {
-        return value !== null && typeof value === 'object' && !Array.isArray(value);
+        return value !== null && typeof(value) === 'object' && !Array.isArray(value);
     }
 
     // :: * -> BOOL
     // Returns TRUE if value is an ARRAY, otherwise returns FALSE:
     static ARRAY(value) {
         return Array.isArray(value);
+    }
+
+    // :: TYPESPEC, BOOL|VOID -> ARRAY -> BOOL
+    // Returns function that applies to an array for checking each element of that array with:
+    // NOTE: Second argument allows empty array to pass check
+    static ARRAY_OF(typeSpec, allowEmpty) {
+        if (typeSpec instanceof TypeSpec) {
+            return (arr) => {
+                if (TypeSpec.ARRAY(arr) === true ) {
+                    return allowEmpty === true & arr.length === 0
+                        ? true 
+                        : arr.every(elem=>typeSpec.check(elem));
+                } 
+                throw new TypeSpecError(`ARRAY_OF can only be applied to an ARRAY`, TypeSpecError.CODE.INVALID_VALUE);
+            }
+        }
+        throw new TypeSpecError(`ARRAY_OF can only use check from instance of TYPESPEC`, TypeSpecError.CODE.INVALID_VALUE);
+    }
+
+    // :: [*] -> * -> BOOL
+    // Checks if a value is a member of the given array:
+    // NOTE: Check is only guantreed for primitive values:
+    static EITHER(arr) {
+        if (TypeSpec.ARRAY(arr) === true) {
+            return (elem) =>  arr.includes(elem);
+        }
+        throw new TypeSpecError(`EITHER can only be applied to an ARRAY`, TypeSpecError.CODE.INVALID_VALUE);
     }
 
     // Returns TRUE if both values are equal, otherwise returns FALSE:
@@ -383,5 +438,5 @@ export default class TypeSpec {
         return a === b;
 
     }
-
+ 
 }

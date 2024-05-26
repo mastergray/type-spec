@@ -1,6 +1,6 @@
 {
   "name": "type-spec",
-  "version": "0.0.3-alpha",
+  "version": "0.0.4-alpha",
   "description": "A minimalist approach to dynamic type checking in JavaScript",
   "main": "./src/index.js",
   "type":"module",
@@ -16,9 +16,11 @@
   },
   "keywords": [
     "Type Checking",
+    "Type Safety",
     "Dynamic Types",
     "Type System",
-    "Types"
+    "Types",
+    "Data Transformations"
   ],
   "bugs": {
     "url": "https://github.com/mastergray/type-spec/issues"
