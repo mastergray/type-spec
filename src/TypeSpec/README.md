@@ -1,6 +1,4 @@
-### TypeSpec Class Documentation
-
-### Description
+## TypeSpec Class Documentation
 The `TypeSpec` class implements a rudimentary type system by representing instances of a "type" as object literals with constrained properties. This class allows for defining properties with specific constraints and validation rules, ensuring that instances adhere to these specifications. It supports dynamic inheritance from parent types, enabling subtypes to override and extend parent properties.
 
 ### Constructor
@@ -88,11 +86,53 @@ The `TypeSpec` class implements a rudimentary type system by representing instan
 - **Returns**: A new `TypeSpec` instance.
 - **Description**: Factory method to create and initialize a new `TypeSpec` instance with the specified type name and an optional parent type.
 
+#### `BOOL(value: any): boolean`
+- **Parameters**:
+  - `value`: The value to check.
+- **Returns**: `true` if the value is a boolean, otherwise `false`.
+- **Description**: Checks if a value is a boolean.
+
+#### `VOID(value: any): boolean`
+- **Parameters**:
+  - `value`: The value to check.
+- **Returns**: `true` if the value is undefined, otherwise `false`.
+- **Description**: Checks if a value is undefined.
+
+#### `NOTHING(value: any): boolean`
+- **Parameters**:
+  - `value`: The value to check.
+- **Returns**: `true` if the value is null, otherwise `false`.
+- **Description**: Checks if a value is null.
+
 #### `STRING(value: any): boolean`
 - **Parameters**:
   - `value`: The value to check.
 - **Returns**: `true` if the value is a string, otherwise `false`.
 - **Description**: Checks if a value is a string.
+
+#### `NONEMPTY_STRING(value: any): boolean`
+- **Parameters**:
+  - `value`: The value to check.
+- **Returns**: `true` if the value is a non-empty string, otherwise `false`.
+- **Description**: Checks if a value is a non-empty string.
+
+#### `NUMBER(value: any): boolean`
+- **Parameters**:
+  - `value`: The value to check.
+- **Returns**: `true` if the value is a number, otherwise `false`.
+- **Description**: Checks if a value is a number.
+
+#### `INT(value: any): boolean`
+- **Parameters**:
+  - `value`: The value to check.
+- **Returns**: `true` if the value is an integer, otherwise `false`.
+- **Description**: Checks if a value is an integer.
+
+#### `UNSIGNED_INT(value: any): boolean`
+- **Parameters**:
+  - `value`: The value to check.
+- **Returns**: `true` if the value is a non-negative integer, otherwise `false`.
+- **Description**: Checks if a value is a non-negative integer.
 
 #### `FUNCTION(value: any): boolean`
 - **Parameters**:
@@ -112,8 +152,22 @@ The `TypeSpec` class implements a rudimentary type system by representing instan
 - **Returns**: `true` if the value is an array, otherwise `false`.
 - **Description**: Checks if a value is an array.
 
+#### `ARRAY_OF(typeSpec: TypeSpec, allowEmpty?: boolean): Function`
+- **Parameters**:
+  - `typeSpec`: A `TypeSpec` instance for validating elements in the array.
+  - `allowEmpty`: Optional; a boolean indicating if empty arrays are allowed.
+- **Returns**: A function that validates if an array matches the specified `TypeSpec`.
+- **Description**: Returns a function to check if each element in an array adheres to the specified `TypeSpec`.
+
+#### `EITHER(arr: any[]): Function`
+- **Parameters**:
+  - `arr`: An array of values to check against.
+- **Returns**: A function that checks if a value is included in the specified array.
+- **Description**: Checks if a value is a member of the given array. Useful for validating enums or specific sets of values.
+
 #### `isEqual(a: any, b: any): boolean`
 - **Parameters**:
-  - `a`, `b`: The values to compare for equality.
+  - `a`: The first value to compare.
+  - `b`: The second value to compare.
 - **Returns**: `true` if both values are equal, otherwise `false`.
 - **Description**: Checks for equality between two values, supporting primitive values, objects, and arrays of primitive values and objects.
