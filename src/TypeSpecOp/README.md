@@ -1,7 +1,3 @@
-Here's the detailed markdown documentation for the `TypeSpecOp` class, following a similar structure to what you provided for `TypeSpec`:
-
----
-
 ## TypeSpecOp Class Documentation
 The `TypeSpecOp` class implements a type-spec operation by transforming one object instance into another object instance. This class leverages well-defined input and output types, along with a series of transformations applied to the input when an operation is executed. This approach is suitable for dynamic environments like React-based web applications and RESTful APIs.
 
@@ -75,7 +71,3 @@ The `TypeSpecOp` class implements a type-spec operation by transforming one obje
   - `val`: An array of values to generate a signature from.
 - **Returns**: An array of strings representing the signature of the provided values.
 - **Description**: Generates a "signature" from an array of values. This is used to overload the `applySignature` method to handle different types of transformations.
-
----
-
-This documentation covers the main aspects of the `TypeSpecOp` class, including its constructor, properties, methods, and static methods. The aliases `left` and `right` are also documented to show their equivalence to `ontoResult` and `ontoEnv`, respectively.
