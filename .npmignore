@@ -39,3 +39,9 @@ test.js
 test/
 archive/
 
+# Docs
+src/TypeSpec/README.md 
+src/TypeSpecError/README.md 
+src/TypeSpecOp/README.md 
+src/TypeSpecTransform/README.md
+
