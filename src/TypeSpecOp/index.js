@@ -148,6 +148,18 @@ export default class TypeSpecOp {
 
     }
 
+    // :: STRING|[STRING]|FUNCTION, STRING|[STRING]|FUNCTION|VOID, FUNCTION|VOID -> OBJECT
+    // Alias for "ontoResult" transform, or how we apply a transform to the "left" argument when running an op:
+    left(...args) {
+        return this.ontoResult(...args);
+    }
+
+     // :: STRING|[STRING]|FUNCTION, STRING|[STRING]|FUNCTION|VOID, FUNCTION|VOID -> OBJECT
+    // Alias for "ontoEnv" transform, or how we apply a transform to the "right" argument when running an op:
+    right(...args) {
+        return this.ontoEnv(...args);
+    }
+
     /**
      *
      *  Static Methods 
