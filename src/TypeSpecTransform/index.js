@@ -115,20 +115,15 @@ export default class TypeSpecTransform {
         if (TypeSpec.ARRAY(this.fromProps) === true) {
 
             // Determine fromValue using "fromProps" of value:
-            const fromValue = this.fromProps.map(prop=>value[prop])
-    
-            // Compute new value we are mapping using from value and copies of result and env to prevent side-effects:
-            const toValue = this.fn(TypeSpec.ARRAY(fromValue) && fromValue.length === 1 ? fromValue[0] : fromValue, [{...result}, {...env}]);
+            const fromValue = this.fromProps.map(prop=>value[prop]);
 
-            // Check if value is frozen before returning so that we can create a shallow copy to write to:
-            return TypeSpec.OBJECT(toValue) === true  || TypeSpec.ARRAY(toValue)
-                ? Object.isFrozen(toValue) ? {...toValue} : toValue
-                : toValue;
+            // Compute new value we are mapping using from value, result, and enviorment:
+            return this.fn(fromValue.length === 1 ? fromValue[0] : fromValue, [result, env]);
 
         }
 
-        // ...otherwise transfrom function is applied to shallow copies of result and enviroment to try and prevent side-effects:
-        return this._fn( [{...result}, {...env}]);
+        // ...otherwise the transfrom function is applied to the result and enviorment directly:
+        return this._fn([result, env]);
             
     }
     

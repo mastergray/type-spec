@@ -80,7 +80,7 @@ export default class TypeSpecOp {
 
     // :: [*], ([*] -> *)
     // Compute signature from given array of arguments, and then applies those argument to a given function using that signature:
-    applySignature(args, fn) {
+    applyTransform(args, fn) {
 
           // Get arguments and signature:
           const [a,b,c] = args;
@@ -121,13 +121,13 @@ export default class TypeSpecOp {
     // :: STRING|[STRING]|FUNCTION, STRING|[STRING]|FUNCTION|VOID, FUNCTION|VOID -> OBJECT
     // Stores transform to be applied to result of operation:
     ontoResult(...args) {
-        return this.applySignature(args, TypeSpecTransform.ontoResult).addTo(this);
+        return this.applyTransform(args, TypeSpecTransform.ontoResult).addTo(this);
     }
 
     // :: STRING|[STRING]|FUNCTION, STRING|[STRING]|FUNCTION|VOID, FUNCTION|VOID -> OBJECT
     // Stores transfrom to be applied to the enviroment of an operation:
     ontoEnv(...args) { 
-        return this.applySignature(args, TypeSpecTransform.ontoEnv).addTo(this);
+        return this.applyTransform(args, TypeSpecTransform.ontoEnv).addTo(this);
     }
 
     // :: OBJECT, OBJECT|VOID -> OBJECT
@@ -137,11 +137,10 @@ export default class TypeSpecOp {
         // Check input value before processing transform:
         this.inputType.check(inputValue);
 
-        // Perform transform using given shallow copies of input and enviroment to prevent side-effects:
-        const [result] = this._transforms.reduce(([result, env], transform) => transform.process([result, env]), [ 
-            {...inputValue}, 
-            {...env},       
-        ]);
+        // Perform transform using given shallow copies of the input value and enviroment to prevent side-effects:
+        const [result] = this._transforms.reduce(([result, env], transform) => {
+           return transform.process([{...result}, {...env}])
+        }, [{...inputValue}, {...env}]);
 
         // Create instance from result of transform:
         return this.outputType.create(result);
@@ -178,9 +177,7 @@ export default class TypeSpecOp {
         if (TypeSpec.ARRAY(val) === true) {
             return val.map(arg => {
                 const type = typeof(arg);
-                return type === "object" && Array.isArray(arg) === true
-                    ? "array"
-                    : type;
+                return type === "object" && Array.isArray(arg) === true ? "array" : type;
             }).join(',');
         } else {
             throw new TypeSpecError(`Can only compute a signature from an ARRAY of values`, TypeSpecError.CODE.INVALID_VALUE);
