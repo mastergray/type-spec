@@ -94,3 +94,45 @@ The `TypeSpecTransform` class defines transformations between types specified by
   - `preventMutation`: Optional; a boolean indicating whether to prevent mutation by creating shallow copies. Defaults to `true`.
 - **Returns**: A new `TypeSpecTransform` instance configured for environment transformation.
 - **Description**: Initializes a transformation for the environment of an operation.
+
+### Examples
+
+#### Example 1: Creating a Simple TypeSpecTransform
+```javascript
+const transform = new TypeSpecTransform({
+  fromProps: ['name', 'age'],
+  toProp: 'description',
+  fn: ([name, age]) => `${name} is ${age} years old.`,
+  preventMutation: true
+});
+
+const input = { name: 'John', age: 25 };
+const [result, env] = transform.processResult([{...input}, {}]);
+console.log(result); // { name: 'John', age: 25, description: 'John is 25 years old.' }
+```
+
+#### Example 2: Adding a Transform to a TypeSpecOp
+```javascript
+const inputType = new TypeSpec('InputType')
+  .prop('name', TypeSpec.STRING)
+  .prop('age', TypeSpec.UNSIGNED_INT);
+
+const outputType = new TypeSpec('OutputType')
+  .prop('description', TypeSpec.STRING);
+
+const op = new TypeSpecOp(inputType, outputType);
+
+const transform = new TypeSpecTransform({
+  fromProps: ['name', 'age'],
+  toProp: 'description',
+  fn: ([name, age]) => `${name} is ${age} years old.`
+});
+
+transform.addTo(op);
+
+const input = { name: 'John', age: 25 };
+const output = op.run(input);
+console.log(output); // { description: 'John is 25 years old.' }
+```
+
+This updated documentation should provide a clear and comprehensive guide to the `TypeSpecTransform` class, making it easier to understand and utilize its capabilities effectively.

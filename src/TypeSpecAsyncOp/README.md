@@ -1,5 +1,5 @@
-## TypeSpecOp Class Documentation
-The `TypeSpecOp` class implements a type-spec operation by transforming one object instance into another object instance. This class leverages well-defined input and output types, along with a series of transformations applied to the input when an operation is executed. This approach is suitable for dynamic environments like React-based web applications and RESTful APIs.
+## TypeSpecAsyncOp Class Documentation
+The `TypeSpecAsyncOp` class extends `TypeSpecOp` to support asynchronous operations by transforming one object instance into another object instance asynchronously. This class leverages well-defined input and output types, along with a series of asynchronous transformations applied to the input when an operation is executed. This approach is suitable for dynamic environments like React-based web applications and RESTful APIs, especially when dealing with asynchronous data.
 
 ### Constructor
 
@@ -8,7 +8,7 @@ The `TypeSpecOp` class implements a type-spec operation by transforming one obje
   - `inputType`: A `TypeSpec` instance representing the type that the input object must conform to.
   - `outputType`: A `TypeSpec` instance representing the type that the output object must conform to.
 - **Description**:
-  - Initializes a new `TypeSpecOp` instance with specified input and output types.
+  - Initializes a new `TypeSpecAsyncOp` instance with specified input and output types.
 
 ### Properties
 
@@ -27,7 +27,7 @@ The `TypeSpecOp` class implements a type-spec operation by transforming one obje
 #### `transforms`
 - **Type**: `[Function]`
 - **Accessor**:
-  - `get transforms()`: Retrieves the list of transformation functions applied during the operation.
+  - `get transforms()`: Retrieves the list of asynchronous transformation functions applied during the operation.
 
 ### Methods
 
@@ -38,43 +38,37 @@ The `TypeSpecOp` class implements a type-spec operation by transforming one obje
 - **Returns**: The result of applying the signature to the function.
 - **Description**: Computes the signature from the given array of arguments and then applies those arguments to a given function using that signature. This method is used to manage different types of transformations.
 
-#### `ontoResult(...args: any[]): Object`
+#### `ontoResult(...args: any[]): Promise<Object>`
 - **Parameters**:
   - `args`: Arguments defining the transformation to be applied to the result of the operation.
-- **Returns**: An object representing the transformation.
-- **Description**: Stores a transformation to be applied to the result of the operation.
+- **Returns**: A promise that resolves to an object representing the transformation.
+- **Description**: Stores an asynchronous transformation to be applied to the result of the operation.
 
-#### `ontoEnv(...args: any[]): Object`
+#### `ontoEnv(...args: any[]): Promise<Object>`
 - **Parameters**:
   - `args`: Arguments defining the transformation to be applied to the environment of the operation.
-- **Returns**: An object representing the transformation.
-- **Description**: Stores a transformation to be applied to the environment of the operation.
+- **Returns**: A promise that resolves to an object representing the transformation.
+- **Description**: Stores an asynchronous transformation to be applied to the environment of the operation.
 
-#### `run(inputValue: Object, env?: Object): Object`
+#### `run(inputValue: Object, env?: Object): Promise<Object>`
 - **Parameters**:
   - `inputValue`: An object representing the input value to be transformed.
   - `env`: Optional; an object representing the environment in which the transformation occurs.
-- **Returns**: The transformed output object.
-- **Description**: Applies transformations to the input value using the specified environment, ensuring the input value conforms to the input type. The result is an object of the output type.
+- **Returns**: A promise that resolves to the transformed output object.
+- **Description**: Applies asynchronous transformations to the input value using the specified environment, ensuring the input value conforms to the input type. The result is an object of the output type.
 
 ### Static Methods
 
-#### `init(inputType: TypeSpec, outputType: TypeSpec): TypeSpecOp`
+#### `init(inputType: TypeSpec, outputType: TypeSpec): TypeSpecAsyncOp`
 - **Parameters**:
   - `inputType`: A `TypeSpec` instance representing the type that the input object must conform to.
   - `outputType`: A `TypeSpec` instance representing the type that the output object must conform to.
-- **Returns**: A new `TypeSpecOp` instance.
-- **Description**: Factory method to create and initialize a new `TypeSpecOp` instance with specified input and output types.
-
-#### `signature(val: Array): [string]`
-- **Parameters**:
-  - `val`: An array of values to generate a signature from.
-- **Returns**: An array of strings representing the signature of the provided values.
-- **Description**: Generates a "signature" from an array of values. This is used to overload the `applyTransform` method to handle different types of transformations.
+- **Returns**: A new `TypeSpecAsyncOp` instance.
+- **Description**: Factory method to create and initialize a new `TypeSpecAsyncOp` instance with specified input and output types.
 
 ### Examples
 
-#### Example 1: Creating a Simple TypeSpecOp
+#### Example 1: Creating a Simple TypeSpecAsyncOp
 ```javascript
 const inputType = new TypeSpec('InputType')
   .prop('name', TypeSpec.STRING)
@@ -84,25 +78,25 @@ const outputType = new TypeSpec('OutputType')
   .prop('fullName', TypeSpec.STRING)
   .prop('isAdult', TypeSpec.BOOL);
 
-const op = new TypeSpecOp(inputType, outputType);
+const op = new TypeSpecAsyncOp(inputType, outputType);
 
-op.ontoResult('name', 'fullName', (name) => `Full Name: ${name}`)
-  .ontoResult(['age'], 'isAdult', (age) => age >= 18);
+op.ontoResult('name', 'fullName', async (name) => `Full Name: ${name}`)
+  .ontoResult(['age'], 'isAdult', async (age) => age >= 18);
 
 const input = { name: 'John Doe', age: 25 };
-const output = op.run(input);
-
-console.log(output); // { fullName: 'Full Name: John Doe', isAdult: true }
+op.run(input).then(output => console.log(output)); // { fullName: 'Full Name: John Doe', isAdult: true }
 ```
 
-#### Example 2: Handling Errors with TypeSpecOp
+#### Example 2: Handling Errors with TypeSpecAsyncOp
 ```javascript
 try {
   const invalidInput = { name: 'John Doe', age: 'twenty-five' };
-  op.run(invalidInput);
+  op.run(invalidInput).catch(error => {
+    if (error instanceof TypeSpecError) {
+      console.error(error.message); // Outputs relevant error message
+    }
+  });
 } catch (error) {
-  if (error instanceof TypeSpecError) {
-    console.error(error.message); // Outputs relevant error message
-  }
+  console.error("An unexpected error occurred:", error);
 }
 ```

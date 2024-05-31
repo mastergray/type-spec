@@ -10,7 +10,7 @@ export default class TypeSpecOp {
 
     _inputType;         // The "type" an object literal must be when passed as the input of an operation
     _outputType;        // The "type" of an object literal must be when returned as the output of this operation
-    _transforms = [];   // Transfrorms which are applied to the input when an operation is "run"
+    _transforms = [];   // Transforms which are applied to the input when an operation is "run"
  
     // CONSTRUCTOR :: TYPESPEC, TYPESPEC -> this
     constructor(inputType, outputType) {
@@ -131,7 +131,7 @@ export default class TypeSpecOp {
     }
 
     // :: OBJECT, OBJECT|VOID -> OBJECT
-    // Applies transform to "toValue" using values from "fromValue"
+    // Applies transform to "input value" using values from an "enviorment":
     run(inputValue, env) {
 
         // Check input value before processing transform:
