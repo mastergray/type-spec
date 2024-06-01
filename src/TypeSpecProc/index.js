@@ -61,6 +61,16 @@ export default class TypeSpecProc {
     
     }
 
+    // :: PROC -> this
+    // Combines the OPs of the given PROC with the OPs of this PROC:
+    compose(proc) {
+        if (TypeSpecProc.isPROC(proc) === true) {
+            this._ops = this._ops.concat(proc.ops);
+            return this;
+        }
+        throw new TypeSpecError("Can only compose instance of TypeSpecProc with another instance of TypeSpecProc", TypeSpecError.CODE.INVALID_VALUE)
+    }
+
     // OBJECT|PROMISE(OBJECT) -> PROMISE(OBJECT)
     // Applies stored OPs to some value:
     // NOTE: Because OPs are required to return a specific type of value, applying OPs to some value effectively "empties the queue" of OPs so we can use the same PROC instance regardless of the type of value an OP requires:
@@ -102,9 +112,16 @@ export default class TypeSpecProc {
 
     // :: * -> BOOL
     // Returns BOOL for if OP is instance of TypeSpecOp or TypeSpecAsyncOp:
-    // NOTE: Op checking resorts to duck typing because Javascript...
+    // NOTE: OP checking resorts to duck typing because Javascript...
     static isOP(op) {
         return op instanceof TypeSpecOp || op.constructor.name === "TypeSpecOp" || op.constructor.name === "TypeSpecAsyncOp";
+    }
+
+     // :: * -> BOOL
+    // Returns BOOL for if OP is instance of TypeSpecOp or TypeSpecAsyncOp:
+    // NOTE: PROC checking resorts to duck typing because Javascript...
+    static isPROC(proc) {
+        return proc instanceof TypeSpecProc || proc.constructor.name === "TypeSpecProc";
     }
 
 }

@@ -129,6 +129,29 @@ export default class TypeSpecOp {
     ontoEnv(...args) { 
         return this.applyTransform(args, TypeSpecTransform.ontoEnv).addTo(this);
     }
+    
+    // :: STRING|[STRING]|FUNCTION, STRING|[STRING]|FUNCTION|VOID, FUNCTION|VOID -> OBJECT
+    // Alias for "ontoResult" transform, or how we apply a transform to the "left" argument when running an op:
+    left(...args) {
+        return this.ontoResult(...args);
+    }
+
+     // :: STRING|[STRING]|FUNCTION, STRING|[STRING]|FUNCTION|VOID, FUNCTION|VOID -> OBJECT
+    // Alias for "ontoEnv" transform, or how we apply a transform to the "right" argument when running an op:
+    right(...args) {
+        return this.ontoEnv(...args);
+    }
+
+    // :: OP -> this
+    // Combines this OP with another OP:
+    // NOTE: Since transforms are stored by reference - changes to the orignal OP will be impacted by the composed OP:
+    compose(op) {
+        if (op instanceof TypeSpecOp) {
+            this._transforms = this._transforms.concat(op.transforms);
+            return this;
+        }
+        throw new TypeSpecError("Can only compose instance of TypeSpecOp with another instance of TypeSpecOp", TypeSpecError.CODE.INVALID_VALUE)
+    }
 
     // :: OBJECT, OBJECT|VOID -> OBJECT
     // Applies transform to "input value" using values from an "enviorment":
@@ -145,18 +168,6 @@ export default class TypeSpecOp {
         // Create instance from result of transform:
         return this.outputType.create(result);
 
-    }
-
-    // :: STRING|[STRING]|FUNCTION, STRING|[STRING]|FUNCTION|VOID, FUNCTION|VOID -> OBJECT
-    // Alias for "ontoResult" transform, or how we apply a transform to the "left" argument when running an op:
-    left(...args) {
-        return this.ontoResult(...args);
-    }
-
-     // :: STRING|[STRING]|FUNCTION, STRING|[STRING]|FUNCTION|VOID, FUNCTION|VOID -> OBJECT
-    // Alias for "ontoEnv" transform, or how we apply a transform to the "right" argument when running an op:
-    right(...args) {
-        return this.ontoEnv(...args);
     }
 
     /**

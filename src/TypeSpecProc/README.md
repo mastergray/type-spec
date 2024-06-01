@@ -27,6 +27,12 @@ The `TypeSpecProc` class allows both synchronous and asynchronous operations to 
 - **Returns**: The `TypeSpecProc` instance for chaining.
 - **Description**: Adds an operation with optional arguments to the list of operations to apply when the `run` method is called.
 
+#### `compose(proc: TypeSpecProc): this`
+- **Parameters**:
+  - `proc`: An instance of `TypeSpecProc` to be composed with the current instance.
+- **Returns**: The current `TypeSpecProc` instance for chaining.
+- **Description**: Combines the operations of the provided `TypeSpecProc` with the current instance's operations. Note that operations are stored by reference, so changes to the original `TypeSpecProc` will impact the composed `TypeSpecProc`.
+
 #### `run(state: Object | Promise<Object>): Promise<Object>`
 - **Parameters**:
   - `state`: An object or a promise that resolves to an object representing the initial state to transform.
@@ -46,6 +52,12 @@ The `TypeSpecProc` class allows both synchronous and asynchronous operations to 
   - `op`: The object to check.
 - **Returns**: `true` if the object is an instance of `TypeSpecOp` or `TypeSpecAsyncOp`, otherwise `false`.
 - **Description**: Checks if the provided object is an instance of `TypeSpecOp` or `TypeSpecAsyncOp`. This method resorts to duck typing due to JavaScript's dynamic nature.
+
+#### `isPROC(proc: any): boolean`
+- **Parameters**:
+  - `proc`: The object to check.
+- **Returns**: `true` if the object is an instance of `TypeSpecProc`, otherwise `false`.
+- **Description**: Checks if the provided object is an instance of `TypeSpecProc`. This method resorts to duck typing due to JavaScript's dynamic nature.
 
 ### Examples
 

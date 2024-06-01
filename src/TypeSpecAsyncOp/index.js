@@ -29,6 +29,17 @@ export default class TypeSpecAsyncOp extends TypeSpecOp {
       return this.applyTransform(args, TypeSpecAsyncTransform.ontoEnv).addTo(this);
    }
 
+   // @Override :: AsyncOP -> this
+   // Combines this OP with another OP:
+   // NOTE: Since transforms are stored by reference - changes to the orignal OP will be impacted by the composed OP:
+   compose(asyncOp) {
+      if (asyncOp instanceof TypeSpecOp) {
+         this._transforms = this._transforms.concat(asyncOp.transforms);
+         return this;
+     }
+     throw new TypeSpecError("Can only compose instance of TypeSpecAsyncOp with another instance of TypeSpecAsyncOp", TypeSpecError.CODE.INVALID_VALUE)
+   }
+
    // @Override :: OBJECT, OBJECT|VOID -> PROMISE(OBJECT)
    // Applies asynchronous transforms to the promise of an "input value" using values from an "enviorment":
    async run(inputValue, env) {

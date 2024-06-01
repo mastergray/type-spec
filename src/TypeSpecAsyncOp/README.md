@@ -50,6 +50,13 @@ The `TypeSpecAsyncOp` class extends `TypeSpecOp` to support asynchronous operati
 - **Returns**: A promise that resolves to an object representing the transformation.
 - **Description**: Stores an asynchronous transformation to be applied to the environment of the operation.
 
+#### `compose(op: TypeSpecOp): this`
+- **Parameters**:
+  - `op`: A `TypeSpecAysncOp` instance to be composed with the current instance.
+- **Returns**: The current `TypeSpecAysncOp` instance.
+- **Description**: Composes the current `TypeSpecAysncOp` instance with another `TypeSpecAysncOp` instance by concatenating their transformations. Note that transforms are stored by reference, so changes to the original `TypeSpecAysncOp` will impact the composed `TypeSpecAysncOp`.
+
+
 #### `run(inputValue: Object, env?: Object): Promise<Object>`
 - **Parameters**:
   - `inputValue`: An object representing the input value to be transformed.
