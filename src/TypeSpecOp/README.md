@@ -1,4 +1,4 @@
-###TypeSpecOp Class Documentation
+## TypeSpecOp Class Documentation
 The `TypeSpecOp` class implements a type-spec operation by transforming one object instance into another object instance. This class leverages well-defined input and output types, along with a series of transformations applied to the input when an operation is executed. 
 
 ### Constructor

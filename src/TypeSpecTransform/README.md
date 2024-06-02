@@ -1,5 +1,4 @@
-### TypeSpecTransform Class Documentation
-
+## TypeSpecTransform Class Documentation
 The `TypeSpecTransform` class defines transformations between types specified by `TypeSpec`. It provides a flexible mechanism to map properties from an input object to an output object using transformation functions. This class is designed to integrate seamlessly with `TypeSpecOp` to handle transformations efficiently.
 
 ### Constructor
@@ -134,5 +133,3 @@ const input = { name: 'John', age: 25 };
 const output = op.run(input);
 console.log(output); // { description: 'John is 25 years old.' }
 ```
-
-This updated documentation should provide a clear and comprehensive guide to the `TypeSpecTransform` class, making it easier to understand and utilize its capabilities effectively.

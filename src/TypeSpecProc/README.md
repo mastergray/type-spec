@@ -1,5 +1,4 @@
-### TypeSpecProc Class Documentation
-
+## TypeSpecProc Class Documentation
 The `TypeSpecProc` class allows both synchronous and asynchronous operations to be applied to a value. It provides a mechanism to sequentially apply a series of operations, which can be a mix of synchronous and asynchronous transformations, to an input value.
 
 ### Constructor
@@ -104,5 +103,3 @@ proc.op(asyncOp);
 const input = { name: 'John', age: 25 };
 proc.run(input).then(output => console.log(output)); // { description: 'John is 25 years old.' }
 ```
-
-This documentation should provide a clear and comprehensive guide to the `TypeSpecProc` class, making it easier to understand and utilize its capabilities effectively.
