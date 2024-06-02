@@ -1,6 +1,7 @@
 // Dependencies:
 import TypeSpec from "../TypeSpec/index.js";             // Type checking
 import TypeSpecError from "../TypeSpecError/index.js";   // Error handling
+import TypeSpecOp from "../TypeSpecOp/index.js";         // OP checking
 
 // Establishes how we can define a transform used by TypeSpecOp to transfrom one value into another:
 export default class TypeSpecTransform {
@@ -106,39 +107,35 @@ export default class TypeSpecTransform {
      * 
      */
 
-    // :: OBJECT, [OBJECT, OBJECT] -> OBJECT
+    // :: OBJECT, [OBJECT, OBJECT], VOID|(OBJECT -> OBJECT) -> OBJECT
     // Define a generic "transform" procedure for mapping specific values to specfic properties of a value:
-    // NOTE: If "fromProps" are not provided, then transform function is applied only to result and enviorment:
+     // NOTE: If "onst toValue =fromProps" are not provided, then transform function is applied only to result and enviorment:
     processValue(value, [result, env]) {
 
-        // If "fromProps" is an array:
-        if (TypeSpec.ARRAY(this.fromProps) === true) {
+        // Determine "fromValue" using "fromProps" - that is value we are transforming "from":
+        const fromValue = TypeSpec.ARRAY(this.fromProps) === true
+            ? this.fromProps.map(prop=>value[prop])
+            : undefined;
 
-            // Determine fromValue using "fromProps" of value:
-            const fromValue = this.fromProps.map(prop=>value[prop])
-    
-            // Compute new value we are mapping using from value and copies of result and env to prevent side-effects:
-            const toValue = this.fn(TypeSpec.ARRAY(fromValue) && fromValue.length === 1 ? fromValue[0] : fromValue, [{...result}, {...env}]);
-
-            // Check if value is frozen before returning so that we can create a shallow copy to write to:
-            return TypeSpec.OBJECT(toValue) === true  || TypeSpec.ARRAY(toValue)
-                ? Object.isFrozen(toValue) ? {...toValue} : toValue
-                : toValue;
-
-        }
-
-        // ...otherwise transfrom function is applied to shallow copies of result and enviroment to try and prevent side-effects:
-        return this._fn( [{...result}, {...env}]);
+        // Transfrom value using fromValue and stored function:
+        return TypeSpec.ARRAY(fromValue) === true 
+            ? this.fn(fromValue.length === 1 ? fromValue[0] : fromValue, [result, env])
+            : this._fn([result, env]);
             
     }
     
     // :: [OBJECT, OBJECT] -> [OBJECT, OBJECT]
     // Defines a generic "transform" procedure for transforming OP result:
     processResult([result, env]) {
-            
+
         // Compute value we are going to map to result:
         const toValue = this.processValue(result, [result, env]);
-   
+
+        // Throw error if "toValue" is a promise to reinforce using TypeSpecAysncTransform:
+        if (toValue instanceof Promise) {
+            throw new TypeSpecError("Cannot transform result using promises", TypeSpecError.CODE.INVALID_VALUE);
+        }
+ 
         // An undefined "toProp" means we are returning the result of the transfrom function as the new result of the OP:
         if (this.toProp === undefined) {
             return [toValue, env];
@@ -148,14 +145,20 @@ export default class TypeSpecTransform {
         result[this.toProp] = toValue;
         return [result, env];
 
+  
     }
 
     // :: [OBJECT, OBJECT] -> [OBJECT, OBJECT]
     // Defines a generic "transform" procedure for transforming OP enviroment:
     processEnv([result, env]) {
-            
+
         // Compute value we are going to map to result:
         const toValue = this.processValue(env, [result, env]);
+
+        // Throw error if "toValue" is a promise to reinforce using TypeSpecAysncTransform:
+        if (toValue instanceof Promise) {
+            throw new TypeSpecError("Cannot transform enviroment using promises", TypeSpecError.CODE.INVALID_VALUE);
+        }
 
         // An undefined "toProp" means we are returning the result of the transfrom function as the new result of the OP:
         if (this.toProp === undefined) {
@@ -171,8 +174,16 @@ export default class TypeSpecTransform {
     // :: OP -> OP
     // Add this transform to an instance of TypeSpecOp:
     addTo(op) {
-        op.transforms.push(this);
-        return op;
+        
+        // Adds this transform to a synchronous OP:
+        if (op instanceof TypeSpecOp) {
+            op.transforms.push(this);
+            return op;
+        }
+
+        // Throw error to enforce that only synchronous transforms can be added to synchronos operations:
+        throw new TypeSpecError("Instance of TypeSpecTransform can only be added to instance of TypeSpecOp", TypeSpecError.CODE.INVALID_VALUE);
+       
     }
 
     /**
@@ -189,29 +200,35 @@ export default class TypeSpecTransform {
     // :: {STRING|[STRING], STRING|VOID, ([*], {result, env} -> *)} -> TRANSFORM
     // Initailizes a transform for the "result" of an OP:
     static ontoResult({from, to, fn}) {
+    
         // Initialize transform :
         const transform = TypeSpecTransform.init({
             "fromProps":from, 
             "toProp":to, 
             "fn":fn
         })
+    
         // Set process and return transform:
         transform.process = transform.processResult;
         return transform;
+    
     } 
 
     // :: {STRING|[STRING], STRING|VOID, ([*], {result, env} -> *)} -> TRANSFORM
     // Initialize a transform for the "enviroment" of an OP:
     static ontoEnv({from, to, fn}) {
+        
         // Initialize transform :
         const transform = TypeSpecTransform.init({
             "fromProps":from, 
             "toProp":to, 
             "fn":fn
         })
+        
         // Set process and return transform:
         transform.process = transform.processEnv;
         return transform;
+    
     } 
 
 }

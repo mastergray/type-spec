@@ -1,5 +1,5 @@
-## TypeSpecOp Class Documentation
-The `TypeSpecOp` class implements a type-spec operation by transforming one object instance into another object instance. This class leverages well-defined input and output types, along with a series of transformations applied to the input when an operation is executed. This approach is suitable for dynamic environments like React-based web applications and RESTful APIs.
+###TypeSpecOp Class Documentation
+The `TypeSpecOp` class implements a type-spec operation by transforming one object instance into another object instance. This class leverages well-defined input and output types, along with a series of transformations applied to the input when an operation is executed. 
 
 ### Constructor
 
@@ -31,7 +31,7 @@ The `TypeSpecOp` class implements a type-spec operation by transforming one obje
 
 ### Methods
 
-#### `applySignature(args: Array, fn: Function): any`
+#### `applyTransform(args: Array, fn: Function): any`
 - **Parameters**:
   - `args`: An array of arguments to apply to the function.
   - `fn`: The function to apply the signature to.
@@ -49,6 +49,24 @@ The `TypeSpecOp` class implements a type-spec operation by transforming one obje
   - `args`: Arguments defining the transformation to be applied to the environment of the operation.
 - **Returns**: An object representing the transformation.
 - **Description**: Stores a transformation to be applied to the environment of the operation.
+
+#### `left(...args: any[]): Object`
+- **Parameters**:
+  - `args`: Arguments defining the transformation to be applied to the left argument when running an operation.
+- **Returns**: An object representing the transformation.
+- **Description**: Alias for `ontoResult`, or how a transformation is applied to the left argument when running an operation.
+
+#### `right(...args: any[]): Object`
+- **Parameters**:
+  - `args`: Arguments defining the transformation to be applied to the right argument when running an operation.
+- **Returns**: An object representing the transformation.
+- **Description**: Alias for `ontoEnv`, or how a transformation is applied to the right argument when running an operation.
+
+#### `compose(op: TypeSpecOp): this`
+- **Parameters**:
+  - `op`: A `TypeSpecOp` instance to be composed with the current instance.
+- **Returns**: The current `TypeSpecOp` instance.
+- **Description**: Composes the current `TypeSpecOp` instance with another `TypeSpecOp` instance by concatenating their transformations. Note that transforms are stored by reference, so changes to the original `TypeSpecOp` will impact the composed `TypeSpecOp`.
 
 #### `run(inputValue: Object, env?: Object): Object`
 - **Parameters**:
@@ -70,4 +88,55 @@ The `TypeSpecOp` class implements a type-spec operation by transforming one obje
 - **Parameters**:
   - `val`: An array of values to generate a signature from.
 - **Returns**: An array of strings representing the signature of the provided values.
-- **Description**: Generates a "signature" from an array of values. This is used to overload the `applySignature` method to handle different types of transformations.
+- **Description**: Generates a "signature" from an array of values. This is used to overload the `applyTransform` method to handle different types of transformations.
+
+### Examples
+
+#### Example 1: Creating a Simple TypeSpecOp
+```javascript
+const inputType = new TypeSpec('InputType')
+  .prop('name', TypeSpec.STRING)
+  .prop('age', TypeSpec.UNSIGNED_INT);
+
+const outputType = new TypeSpec('OutputType')
+  .prop('fullName', TypeSpec.STRING)
+  .prop('isAdult', TypeSpec.BOOL);
+
+const op = new TypeSpecOp(inputType, outputType);
+
+op.ontoResult('name', 'fullName', (name) => `Full Name: ${name}`)
+  .ontoResult(['age'], 'isAdult', (age) => age >= 18);
+
+const input = { name: 'John Doe', age: 25 };
+const output = op.run(input);
+
+console.log(output); // { fullName: 'Full Name: John Doe', isAdult: true }
+```
+
+#### Example 2: Handling Errors with TypeSpecOp
+```javascript
+try {
+  const invalidInput = { name: 'John Doe', age: 'twenty-five' };
+  op.run(invalidInput);
+} catch (error) {
+  if (error instanceof TypeSpecError) {
+    console.error(error.message); // Outputs relevant error message
+  }
+}
+```
+
+#### Example 3: Composing TypeSpecOps
+```javascript
+const op1 = new TypeSpecOp(inputType, outputType)
+  .ontoResult('name', 'fullName', (name) => `Full Name: ${name}`);
+
+const op2 = new TypeSpecOp(outputType, outputType)
+  .ontoResult('age', 'isAdult', (age) => age >= 18);
+
+const composedOp = op1.compose(op2);
+
+const input = { name: 'John Doe', age: 25 };
+const output = composedOp.run(input);
+
+console.log(output); // { fullName: 'Full Name: John Doe', isAdult: true }
+```

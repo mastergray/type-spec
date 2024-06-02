@@ -1,3 +1,5 @@
+Here's the updated documentation reflecting all the changes we've made to the TypeSpec framework:
+
 # type-spec
 
 `type-spec` is designed to be a lightweight, dynamic type enforcement system for JavaScript. It represents types as object literals with constrained properties, allowing for the definition, instantiation, and validation of custom types with clear structural and behavioral constraints. It ensures properties, once defined, remain consistent and cannot be redefined, upholding dependable type behavior.
@@ -124,9 +126,7 @@ try {
 This example demonstrates how to define and use type-spec operations to transform data between types:
 
 ```javascript
-import TypeSpec from 'type-spec';
-import TypeSpecOp from 'type-spec/TypeSpecOp';
-import TypeSpecTransform from 'type-spec/TypeSpecTransform';
+import TypeSpec, {TypeSpecOp, TypeSpecTransform} from 'type-spec';
 
 // Define User type
 const User = new TypeSpec('User')
@@ -146,7 +146,7 @@ const userToSummaryFn = (fromValue) => ({
 
 // Define User to UserSummary operation
 const userToSummaryOp = new TypeSpecOp(User, UserSummary)
-    .ontoResult({ from: ['username', 'age'], to: ['username', 'isAdult'], fn: userToSummaryFn });
+    .ontoResult('username', 'isAdult', userToSummaryFn);
 
 // Creating an instance of User:
 const userInstance = User.create({ username: 'johndoe', age: 30 });
@@ -161,12 +161,110 @@ try {
 }
 ```
 
+### Defining and Using Asynchronous type-spec Operations
+
+This example demonstrates how to define and use asynchronous type-spec operations to transform data between types:
+
+```javascript
+import TypeSpec, {TypeSpecAsyncOp, TypeSpecAsyncTransform} from 'type-spec';
+
+// Define User type
+const User = new TypeSpec('User')
+    .prop('username', TypeSpec.NONEMPTY_STRING)
+    .prop('age', value => TypeSpec.NUMBER(value) && value > 0);
+
+// Define UserSummary type
+const UserSummary = new TypeSpec('UserSummary')
+    .prop('username', TypeSpec.NONEMPTY_STRING)
+    .prop('isAdult', TypeSpec.BOOL);
+
+// Define asynchronous transformation function
+const userToSummaryAsyncFn = async (fromValue) => ({
+    username: fromValue.username,
+    isAdult: fromValue.age >= 18
+});
+
+// Define User to UserSummary asynchronous operation
+const userToSummaryAsyncOp = new TypeSpecAsyncOp(User, UserSummary)
+    .ontoResult('username', 'isAdult', userToSummaryAsyncFn);
+
+// Creating an instance of User:
+const userInstance = User.create({ username: 'johndoe', age: 30 });
+console.log('User created:', userInstance);
+
+// Transform User to UserSummary:
+userToSummaryAsyncOp.run(userInstance).then(summaryInstance => {
+    console.log('UserSummary created:', summaryInstance);
+}).catch(error => {
+    console.error('Error:', error.message);
+});
+```
+
+### Defining and Using TypeSpecProc for Composable Operations
+
+This example demonstrates how to define and use `TypeSpecProc` to compose and run multiple operations:
+
+```javascript
+import TypeSpec from 'type-spec';
+import TypeSpecOp from 'type-spec/TypeSpecOp';
+import TypeSpecProc from 'type-spec/TypeSpecProc';
+
+// Define User type
+const User = new TypeSpec('User')
+    .prop('username', TypeSpec.NONEMPTY_STRING)
+    .prop('age', value => TypeSpec.NUMBER(value) && value > 0);
+
+// Define UserSummary type
+const UserSummary = new TypeSpec('UserSummary')
+    .prop('username', TypeSpec.NONEMPTY_STRING)
+    .prop('isAdult', TypeSpec.BOOL);
+
+// Define transformation functions
+const userToSummaryFn = (fromValue) => ({
+    username: fromValue.username,
+    isAdult: fromValue.age >= 18
+});
+const addGreetingFn = (fromValue) => ({
+    ...fromValue,
+    greeting: `Hello, ${fromValue.username}`
+});
+
+// Define User to UserSummary operation
+const userToSummaryOp = new TypeSpecOp(User, UserSummary)
+    .ontoResult('username', 'isAdult', userToSummaryFn);
+
+// Define another operation to add greeting
+const addGreetingOp = new TypeSpecOp(UserSummary, UserSummary)
+    .onto
+
+Result('username', 'greeting', addGreetingFn);
+
+// Compose operations using TypeSpecProc
+const proc = new TypeSpecProc();
+proc.op(userToSummaryOp).op(addGreetingOp);
+
+// Creating an instance of User:
+const userInstance = User.create({ username: 'johndoe', age: 30 });
+console.log('User created:', userInstance);
+
+// Run composed operations:
+proc.run(userInstance).then(finalResult => {
+    console.log('Final result:', finalResult);  // { username: 'johndoe', isAdult: true, greeting: 'Hello, johndoe' }
+}).catch(error => {
+    console.error('Error:', error.message);
+});
+```
+
+### Notes on Composition and Reference
+
+When composing operations and procedures using `TypeSpecOp` and `TypeSpecProc`, be aware that operations are stored by reference. This means that changes to the original operation or procedure will impact the composed operation or procedure. If isolation is necessary, consider creating copies of operations before composing.
+
 ## Notice
 
 `type-spec` is very much a work-in-progress. While the base implementation seems stable, I'd like to introduce more robust and automated testing, especially given this project's intent. Further, I'd like to add the following:
 
-- Asynchronous operations
-- Composable operations
 - Mixins
+- Using types as type definitions
+- Optimizing "isEqual" so we can apply to EITHER 
 
 Not to mention I have plenty of benchmarking I want to do too. Documentation is currently in draft as well, since what's currently included was generated by ChatGPT. For better or worse...
