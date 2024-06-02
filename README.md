@@ -1,5 +1,3 @@
-Here's the updated documentation reflecting all the changes we've made to the TypeSpec framework:
-
 # type-spec
 
 `type-spec` is designed to be a lightweight, dynamic type enforcement system for JavaScript. It represents types as object literals with constrained properties, allowing for the definition, instantiation, and validation of custom types with clear structural and behavioral constraints. It ensures properties, once defined, remain consistent and cannot be redefined, upholding dependable type behavior.
