@@ -54,7 +54,7 @@ export default class TypeSpecAsyncOp extends TypeSpecOp {
       const result = await this._transforms.reduce(async (promise, transform) => {
          const [result, env] = await promise;
          return transform.process([{...result}, {...env}])
-      }, Promise.resolve([{...valueToTransform}, {...env}]));
+      }, Promise.resolve([valueToTransform, env]));
 
       // Create instance from result of transform:
       // NOTE: We reference result value by index since deconstructing doesn't seem to work when returning a PROMISE of an ARRAY:

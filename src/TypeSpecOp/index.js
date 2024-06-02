@@ -163,7 +163,7 @@ export default class TypeSpecOp {
         // Perform transform using given shallow copies of the input value and enviroment to prevent side-effects:
         const [result] = this._transforms.reduce(([result, env], transform) => {
            return transform.process([{...result}, {...env}])
-        }, [{...inputValue}, {...env}]);
+        }, [inputValue, env]);
 
         // Create instance from result of transform:
         return this.outputType.create(result);
