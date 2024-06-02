@@ -1,3 +1,5 @@
+Sure, here is the updated documentation for the `TypeSpec` class based on the provided code:
+
 ## TypeSpec Class Documentation
 The `TypeSpec` class implements a rudimentary type system by representing instances of a "type" as object literals with constrained properties. This class allows for defining properties with specific constraints and validation rules, ensuring that instances adhere to these specifications. It supports dynamic inheritance from parent types, enabling subtypes to override and extend parent properties.
 
@@ -37,13 +39,13 @@ The `TypeSpec` class implements a rudimentary type system by representing instan
 
 ### Methods
 
-#### `prop(name: string, pred: Function, defaultValue?: any): TypeSpec`
+#### `prop(name: string, constraint: Function | TypeSpec, defaultValue?: any): TypeSpec`
 - **Parameters**:
   - `name`: The name of the property to define or modify.
-  - `pred`: A predicate function that validates the property's value.
+  - `constraint`: A predicate function or `TypeSpec` instance that validates the property's value.
   - `defaultValue`: Optional; the default value for the property when not provided.
 - **Returns**: The `TypeSpec` instance, allowing for method chaining.
-- **Description**: Defines a property with a validation predicate. Throws errors if the property name or predicate fails validations, or if there is an attempt to redefine a property that conflicts with inherited properties.
+- **Description**: Defines a property with a validation predicate or `TypeSpec`. Throws errors if the property name or predicate fails validations, or if there is an attempt to redefine a property that conflicts with inherited properties.
 
 #### `constant(name: string, value: any): TypeSpec`
 - **Parameters**:
@@ -76,6 +78,12 @@ The `TypeSpec` class implements a rudimentary type system by representing instan
   - `newProps`: New property values for updating the instance.
 - **Returns**: An updated instance object.
 - **Description**: Updates an instance with new properties, validating new values. Encourages immutability by returning a new object instead of modifying the original.
+
+#### `isOf(value: any): boolean`
+- **Parameters**:
+  - `value`: The value to check.
+- **Returns**: `true` if the value adheres to the type definition, otherwise `false`.
+- **Description**: Checks if a value is of the defined type by validating it against the type's properties.
 
 ### Static Methods
 
@@ -152,12 +160,12 @@ The `TypeSpec` class implements a rudimentary type system by representing instan
 - **Returns**: `true` if the value is an array, otherwise `false`.
 - **Description**: Checks if a value is an array.
 
-#### `ARRAY_OF(typeSpec: TypeSpec, allowEmpty?: boolean): Function`
+#### `ARRAY_OF(constraint: TypeSpec | Function, allowEmpty?: boolean): Function`
 - **Parameters**:
-  - `typeSpec`: A `TypeSpec` instance for validating elements in the array.
+  - `constraint`: A `TypeSpec` instance or a predicate function for validating elements in the array.
   - `allowEmpty`: Optional; a boolean indicating if empty arrays are allowed.
-- **Returns**: A function that validates if an array matches the specified `TypeSpec`.
-- **Description**: Returns a function to check if each element in an array adheres to the specified `TypeSpec`.
+- **Returns**: A function that validates if an array matches the specified `TypeSpec` or predicate.
+- **Description**: Returns a function to check if each element in an array adheres to the specified `TypeSpec` or predicate.
 
 #### `EITHER(arr: any[]): Function`
 - **Parameters**:
