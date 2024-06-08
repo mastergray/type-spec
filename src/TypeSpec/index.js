@@ -1,5 +1,6 @@
 // Dependencies:
 import TypeSpecError from "../TypeSpecError/index.js"; // For handling errors throw by TypeSpec:
+import TypeSpecBuild from "../TypeSpecBuild/index.js"; // For precomputing optimized functions
 
 //  Implements a rudimentary "type system" that represents instance of a "type" as an  object literal with constrained properties:
 export default class TypeSpec {
@@ -94,19 +95,27 @@ export default class TypeSpec {
      * 
      */
 
-    // ::  name:STRING, pred:(* -> BOOL), defaultValue:*|VOID -> this 
-    // Binds name to predicate to check property of type instance with
+    // ::  name:STRING, constraint:(* -> BOOL)|TYPESPEC|ARRAY, defaultValue:*|VOID -> this 
+    // Binds name to predicate, ARRAY of possible values, or TYPESPEC to check property of type instance with
     // NOTE: Optional "defaultValue" is used when property is not provided when creating instance of type:
-    prop(name, pred, defaultValue) {
+    prop(name, constraint, defaultValue) {
 
         // Ensure name is STRING:
         if (TypeSpec.STRING(name) === false) {
             throw TypeSpecError.INVALID_VALUE("Property Name", "STRING");
         }
 
-        // Ensure predicate is FUNCTION:
+        // Use TYPSPEC check method as predicate if constraint is TYPSPEC:
+        // TOOD: Nested ternary operators aren't usally the most ideal....
+        const pred = constraint instanceof TypeSpec
+            ? (val) => constraint.isOf(val)
+            : TypeSpec.ARRAY(constraint) === true 
+                ? TypeSpec.EITHER(constraint, defaultValue !== undefined)
+                : constraint
+ 
+        // Ensure predicate is a FUNCTION:
         if (TypeSpec.FUNCTION(pred) === false) {
-            throw TypeSpecError.INVALID_VALUE("Property Predicate", "FUNCTION");
+            throw new TypeSpecError(`Check for property "${name} of TYPE "${this.typeName}" must be either a FUNCTION or TYPESPEC`, TypeSpecError.CODE.INVALID_PROPERTY_TYPE);
         }
 
         // Check to see if this property has already been defined:
@@ -189,7 +198,7 @@ export default class TypeSpec {
 
             // Check if value of instance is valid:
             if (this.propDefinition(name).check(value) === false) {
-                throw TypeSpecError.INVALID_PROP(this.typeName, name);
+                throw new TypeSpecError(`Value of property "${name}" failed check for type "${this.typeName}"`, TypeSpecError.CODE.INVALID_VALUE);
             }
 
             // Add valid property to check against before returning validated instance:
@@ -243,7 +252,7 @@ export default class TypeSpec {
             }
 
             // Otherwise throw an exception if check fails:
-            throw TypeSpecError.INVALID_PROP(this.typeName, propName);
+            throw new TypeSpecError(`Value of  property "${propName}" failed check for type "${this.typeName}"`, TypeSpecError.CODE.INVALID_VALUE);
 
         }, {});
 
@@ -280,6 +289,27 @@ export default class TypeSpec {
         // Return frozen instance to encourage immutabilitiy:
         return Object.freeze(updatedInstance)
 
+    }
+
+    // :: * -> BOOL
+    // Returns TRUE if value "is of" this instance of TYPESPEC
+    isOf(value) {
+        try {
+            this.check(value);
+            return true;
+        } catch (err) {
+            return false;
+        }
+    }
+
+    // :: VOID -> TYPESPECBUILD
+    // Builds an optimized version of this instance using precomputed functions for create, update, and check methods:
+    build() {
+        const props = Array.from(this.propNames).reduce((result, propName) => {
+            result[propName] = this.propDefinition(propName);
+            return result;
+        }, {});
+        return TypeSpecBuild.init(this.typeName, {...props});
     }
 
     /**
@@ -330,15 +360,27 @@ export default class TypeSpec {
     }
 
     // :: * -> BOOL
-    // Returns TURE if value is an integer, otherwise returns false:
+    // Returns TURE if value is an integer, otherwise returns FALSE:
     static INT(value) {
         return Number.isInteger(value);
     }
 
     // :: * -> BOOL
-    // Returns TRUE if value is a non-negative integer:
+    // Returns TRUE if value is a non-negative integer, otherwise returns FALSE:
     static UNSIGNED_INT(value) {
         return TypeSpec.INT(value) && value >= 0;
+    }
+
+    // :: * -> BOOL
+    // Returns TRUE if value is a postive and non-zero integer, otherwise returns FALSE:
+    static NONZERO_INT(value) {
+        return TypeSpec.INT(value) && value > 0;
+    }
+
+    // :: * --> BOOL
+    // Returns TRUE if value is either 1 or 0, otherwise returns FALSE:
+    static BOOL_INT(value) {
+        return value === 1 || value === 0;
     }
 
     // :: * -> BOOL
@@ -359,21 +401,24 @@ export default class TypeSpec {
         return Array.isArray(value);
     }
 
-    // :: TYPESPEC, BOOL|VOID -> ARRAY -> BOOL
+    // :: TYPESPEC|(* -> BOOL), BOOL|VOID -> ARRAY -> BOOL
     // Returns function that applies to an array for checking each element of that array with:
     // NOTE: Second argument allows empty array to pass check
-    static ARRAY_OF(typeSpec, allowEmpty) {
-        if (typeSpec instanceof TypeSpec) {
+    static ARRAY_OF(constraint, allowEmpty) {
+        if (constraint instanceof TypeSpec || constraint instanceof TypeSpecBuild || TypeSpec.FUNCTION(constraint) === true) {
             return (arr) => {
                 if (TypeSpec.ARRAY(arr) === true ) {
+                    const check = constraint instanceof TypeSpec || constraint instanceof TypeSpecBuild
+                        ? (val) =>constraint.check(val) 
+                        : constraint
                     return allowEmpty === true & arr.length === 0
                         ? true 
-                        : arr.every(elem=>typeSpec.check(elem));
+                        : arr.every(check);
                 } 
                 throw new TypeSpecError(`ARRAY_OF can only be applied to an ARRAY`, TypeSpecError.CODE.INVALID_VALUE);
             }
         }
-        throw new TypeSpecError(`ARRAY_OF can only use check from instance of TYPESPEC`, TypeSpecError.CODE.INVALID_VALUE);
+        throw new TypeSpecError(`ARRAY_OF can only use check from a FUNCTION or an instance of TYPESPEC`, TypeSpecError.CODE.INVALID_VALUE);
     }
 
     // :: [*] -> * -> BOOL
@@ -381,7 +426,19 @@ export default class TypeSpec {
     // NOTE: Check is only guantreed for primitive values:
     static EITHER(arr) {
         if (TypeSpec.ARRAY(arr) === true) {
-            return (elem) =>  arr.includes(elem);
+            return (val) => {
+                for (const elem of arr) {
+                    if (elem instanceof TypeSpec || elem instanceof TypeSpecBuild) {
+                        if (elem.isOf(val) === true) {
+                            return true;
+                        }
+                    }
+                    if (TypeSpec.isEqual(elem, val)) {
+                        return true;
+                    }
+                }
+                return false;
+            }
         }
         throw new TypeSpecError(`EITHER can only be applied to an ARRAY`, TypeSpecError.CODE.INVALID_VALUE);
     }
@@ -390,53 +447,62 @@ export default class TypeSpec {
     // NOTE: This is restricted to equality between primitive values, OBJECTs, ARRAYs of primitive values, and ARRAYs of OBJECTs:
     static isEqual(a,b) {
 
-        // Compare arrays:
-        if (TypeSpec.ARRAY(a) && TypeSpec.ARRAY(b)) {
-            
-            // Checks fails if arrays are of different length:
-            if (a.length !== b.length) {
+        // Use a simple array as a queue
+        const queue = [[a, b]];
+
+        while (queue.length) {
+
+            // Dequeue the first pair of values
+            const [a, b] = queue.shift();
+
+            // If the values are strictly equal, they are considered equal
+            if (a === b) continue;
+
+            // If the types are different, the values are not equal
+            const typeA = typeof a;
+            const typeB = typeof b;
+            if (typeA !== typeB) return false;
+
+            if (typeA === 'object') {
+                if (a === null || b === null) return false; // One of them is null
+
+                // Check if both values are arrays
+                const isArrayA = Array.isArray(a);
+                const isArrayB = Array.isArray(b);
+
+                // If one is an array and the other is not, they are not equal
+                if (isArrayA !== isArrayB) return false;
+
+                if (isArrayA && isArrayB) {
+                    // Compare array lengths
+                    if (a.length !== b.length) return false;
+
+                    // Enqueue each pair of elements for comparison
+                    for (let i = 0; i < a.length; i++) {
+                        queue.push([a[i], b[i]]);
+                    }
+                } else {
+                    // Compare objects
+                    const aPropNames = Object.keys(a);
+                    const bPropNames = new Set(Object.keys(b));
+
+                    // If objects have different numbers of properties, they are not equal
+                    if (aPropNames.length !== bPropNames.size) return false;
+
+                    // Enqueue each pair of property values for comparison
+                    for (const propName of aPropNames) {
+                        if (!bPropNames.has(propName)) return false;
+                        queue.push([a[propName], b[propName]]);
+                    }
+                }
+            } else {
+                // For primitive types, if they are not strictly equal, return false
                 return false;
             }
-            
-            // Recursively compare array elements:
-            for (let i = 0; i < a.length; i++) {             
-                if (!TypeSpec.isEqual(a[i], b[i]))  {
-                    return false;
-                }
-            }
-
-            // Returns TRUE if everything is "equal":
-            return true;
-
         }
 
-        // Compare objects:
-        if (TypeSpec.OBJECT(a) && TypeSpec.OBJECT(b)) {
-            
-            // Get property names for comparing with:
-            const aPropNames = Object.keys(a);
-            const bPropNames = Object.keys(b);
-            
-            // Check fails if number of property names are differnt:
-            if (aPropNames.length !== bPropNames.length) {
-                return false;
-            }
-
-            // Recursively compare object properties:
-            for (const propName of aPropNames) {
-                if (!bPropNames.includes(propName) || !TypeSpec.isEqual(a[propName], b[propName])) {
-                    return false
-                }
-            }
-
-             // Returns TRUE if everything is "equal":
-             return true;
-
-        }
-
-        // Otherwise compare primitive values:
-        return a === b;
-
+        // If all comparisons are equal, return true
+        return true;
     }
  
 }

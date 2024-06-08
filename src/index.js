@@ -5,6 +5,7 @@ import TypeSpecTransform from "./TypeSpecTransform/index.js"
 import TypeSpecAsyncOp from "./TypeSpecAsyncOp/index.js";
 import TypeSpecAsyncTransform from "./TypeSpecAsyncTransform/index.js";
 import TypeSpecProc from "./TypeSpecProc/index.js"
+import TypeSpecBuild from "./TypeSpecBuild/index.js";
 
 export default TypeSpec;
 
@@ -14,5 +15,6 @@ export {
     TypeSpecTransform,
     TypeSpecAsyncOp,
     TypeSpecAsyncTransform,
-    TypeSpecProc
+    TypeSpecProc,
+    TypeSpecBuild
 }
