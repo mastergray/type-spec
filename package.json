@@ -3,14 +3,12 @@
   "version": "0.0.6-alpha",
   "description": "A minimalist approach to dynamic type checking in JavaScript",
   "main": "./src/index.js",
-  "type": "module",
+  "type":"module",
   "scripts": {
     "staging": "nodemon --watch ./ -e js,json,ts ./test/index.js"
   },
   "nodemonConfig": {
-    "ignore": [
-      "node_modules/**/*"
-    ]
+    "ignore": ["node_modules/**/*"]
   },
   "repository": {
     "type": "git",
@@ -22,8 +20,7 @@
     "Dynamic Types",
     "Type System",
     "Types",
-    "Data Transformations",
-    "Functional Programming"
+    "Validation"
   ],
   "bugs": {
     "url": "https://github.com/mastergray/type-spec/issues"
@@ -32,15 +29,6 @@
   "license": "MIT",
   "homepage": "https://github.com/mastergray/type-spec#readme",
   "devDependencies": {
-    "benchmark": "^2.1.4",
-    "heapdump": "^0.3.15",
-    "joi": "^17.13.1",
-    "nodemon": "^3.1.0",
-    "objectmodel": "^4.4.5",
-    "runtypes": "^6.7.0",
-    "superstruct": "^1.0.4",
-    "tcomb": "^3.2.29",
-    "yup": "^1.4.0",
-    "zod": "^3.23.8"
+    "nodemon": "^3.1.0"
   }
 }

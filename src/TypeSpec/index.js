@@ -1,5 +1,6 @@
 // Dependencies:
 import TypeSpecError from "../TypeSpecError/index.js"; // For handling errors throw by TypeSpec:
+import TypeSpecBuild from "../TypeSpecBuild/index.js"; // For precomputing optimized functions
 
 //  Implements a rudimentary "type system" that represents instance of a "type" as an  object literal with constrained properties:
 export default class TypeSpec {
@@ -94,8 +95,8 @@ export default class TypeSpec {
      * 
      */
 
-    // ::  name:STRING, constraint:(* -> BOOL)|TYPESPEC, defaultValue:*|VOID -> this 
-    // Binds name to predicate or TYPESPEC to check property of type instance with
+    // ::  name:STRING, constraint:(* -> BOOL)|TYPESPEC|ARRAY, defaultValue:*|VOID -> this 
+    // Binds name to predicate, ARRAY of possible values, or TYPESPEC to check property of type instance with
     // NOTE: Optional "defaultValue" is used when property is not provided when creating instance of type:
     prop(name, constraint, defaultValue) {
 
@@ -104,10 +105,13 @@ export default class TypeSpec {
             throw TypeSpecError.INVALID_VALUE("Property Name", "STRING");
         }
 
-        // Use TYPSPEC check method as predicate if constraint is TYPSPEC
+        // Use TYPSPEC check method as predicate if constraint is TYPSPEC:
+        // TOOD: Nested ternary operators aren't usally the most ideal....
         const pred = constraint instanceof TypeSpec
             ? (val) => constraint.isOf(val)
-            : constraint;
+            : TypeSpec.ARRAY(constraint) === true 
+                ? TypeSpec.EITHER(constraint, defaultValue !== undefined)
+                : constraint
  
         // Ensure predicate is a FUNCTION:
         if (TypeSpec.FUNCTION(pred) === false) {
@@ -194,7 +198,7 @@ export default class TypeSpec {
 
             // Check if value of instance is valid:
             if (this.propDefinition(name).check(value) === false) {
-                throw new TypeSpecError(`Value of "${value}" of property "${name}" failed check for type "${this.typeName}"`, TypeSpecError.CODE.INVALID_VALUE);
+                throw new TypeSpecError(`Value of property "${name}" failed check for type "${this.typeName}"`, TypeSpecError.CODE.INVALID_VALUE);
             }
 
             // Add valid property to check against before returning validated instance:
@@ -248,7 +252,7 @@ export default class TypeSpec {
             }
 
             // Otherwise throw an exception if check fails:
-            throw new TypeSpecError(`Value of "${value}" for property "${propName}" failed check for type "${this.typeName}"`, TypeSpecError.CODE.INVALID_VALUE);
+            throw new TypeSpecError(`Value of  property "${propName}" failed check for type "${this.typeName}"`, TypeSpecError.CODE.INVALID_VALUE);
 
         }, {});
 
@@ -296,6 +300,16 @@ export default class TypeSpec {
         } catch (err) {
             return false;
         }
+    }
+
+    // :: VOID -> TYPESPECBUILD
+    // Builds an optimized version of this instance using precomputed functions for create, update, and check methods:
+    build() {
+        const props = Array.from(this.propNames).reduce((result, propName) => {
+            result[propName] = this.propDefinition(propName);
+            return result;
+        }, {});
+        return TypeSpecBuild.init(this.typeName, {...props});
     }
 
     /**
@@ -346,15 +360,27 @@ export default class TypeSpec {
     }
 
     // :: * -> BOOL
-    // Returns TURE if value is an integer, otherwise returns false:
+    // Returns TURE if value is an integer, otherwise returns FALSE:
     static INT(value) {
         return Number.isInteger(value);
     }
 
     // :: * -> BOOL
-    // Returns TRUE if value is a non-negative integer:
+    // Returns TRUE if value is a non-negative integer, otherwise returns FALSE:
     static UNSIGNED_INT(value) {
         return TypeSpec.INT(value) && value >= 0;
+    }
+
+    // :: * -> BOOL
+    // Returns TRUE if value is a postive and non-zero integer, otherwise returns FALSE:
+    static NONZERO_INT(value) {
+        return TypeSpec.INT(value) && value > 0;
+    }
+
+    // :: * --> BOOL
+    // Returns TRUE if value is either 1 or 0, otherwise returns FALSE:
+    static BOOL_INT(value) {
+        return value === 1 || value === 0;
     }
 
     // :: * -> BOOL
@@ -379,11 +405,11 @@ export default class TypeSpec {
     // Returns function that applies to an array for checking each element of that array with:
     // NOTE: Second argument allows empty array to pass check
     static ARRAY_OF(constraint, allowEmpty) {
-        if (constraint instanceof TypeSpec || TypeSpec.FUNCTION(constraint) === true) {
+        if (constraint instanceof TypeSpec || constraint instanceof TypeSpecBuild || TypeSpec.FUNCTION(constraint) === true) {
             return (arr) => {
                 if (TypeSpec.ARRAY(arr) === true ) {
-                    const check = constraint instanceof TypeSpec
-                        ? (val) => constraint.check(val) 
+                    const check = constraint instanceof TypeSpec || constraint instanceof TypeSpecBuild
+                        ? (val) =>constraint.check(val) 
                         : constraint
                     return allowEmpty === true & arr.length === 0
                         ? true 
@@ -402,7 +428,7 @@ export default class TypeSpec {
         if (TypeSpec.ARRAY(arr) === true) {
             return (val) => {
                 for (const elem of arr) {
-                    if (elem instanceof TypeSpec) {
+                    if (elem instanceof TypeSpec || elem instanceof TypeSpecBuild) {
                         if (elem.isOf(val) === true) {
                             return true;
                         }

@@ -1,5 +1,3 @@
-Sure, here is the updated documentation for the `TypeSpec` class based on the provided code:
-
 ## TypeSpec Class Documentation
 The `TypeSpec` class implements a rudimentary type system by representing instances of a "type" as object literals with constrained properties. This class allows for defining properties with specific constraints and validation rules, ensuring that instances adhere to these specifications. It supports dynamic inheritance from parent types, enabling subtypes to override and extend parent properties.
 
@@ -85,6 +83,10 @@ The `TypeSpec` class implements a rudimentary type system by representing instan
 - **Returns**: `true` if the value adheres to the type definition, otherwise `false`.
 - **Description**: Checks if a value is of the defined type by validating it against the type's properties.
 
+#### `build(): TypeSpecBuild`
+- **Returns**: An optimized version of the `TypeSpec` instance using precomputed functions for create, update, and check methods.
+- **Description**: Builds an optimized version of this `TypeSpec` instance, enhancing performance by precomputing the functions for creation, updating, and checking of instances.
+
 ### Static Methods
 
 #### `init(typeName: string, parentType?: TypeSpec): TypeSpec`
@@ -141,6 +143,18 @@ The `TypeSpec` class implements a rudimentary type system by representing instan
   - `value`: The value to check.
 - **Returns**: `true` if the value is a non-negative integer, otherwise `false`.
 - **Description**: Checks if a value is a non-negative integer.
+
+#### `NONZERO_INT(value: any): boolean`
+- **Parameters**:
+  - `value`: The value to check.
+- **Returns**: `true` if the value is a positive non-zero integer, otherwise `false`.
+- **Description**: Checks if a value is a positive non-zero integer.
+
+#### `BOOL_INT(value: any): boolean`
+- **Parameters**:
+  - `value`: The value to check.
+- **Returns**: `true` if the value is either 1 or 0, otherwise `false`.
+- **Description**: Checks if a value is either 1 or 0.
 
 #### `FUNCTION(value: any): boolean`
 - **Parameters**:
