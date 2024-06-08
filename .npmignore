@@ -48,5 +48,6 @@ src/TypeSpecAsyncOp/README.md
 src/TypeSpecAsyncTransform/README.md
 src/TypeSpecProc/README.md 
 src/TypeSpecBuild/README.md
+src/TypeSpecContinuation/README.md
 benchmarking/
 

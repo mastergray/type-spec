@@ -6,6 +6,7 @@ import TypeSpecAsyncOp from "./TypeSpecAsyncOp/index.js";
 import TypeSpecAsyncTransform from "./TypeSpecAsyncTransform/index.js";
 import TypeSpecProc from "./TypeSpecProc/index.js"
 import TypeSpecBuild from "./TypeSpecBuild/index.js";
+import TypeSpecContinuation from "./TypeSpecContinuation/index.js"
 
 export default TypeSpec;
 
@@ -16,5 +17,6 @@ export {
     TypeSpecAsyncOp,
     TypeSpecAsyncTransform,
     TypeSpecProc,
-    TypeSpecBuild
+    TypeSpecBuild,
+    TypeSpecContinuation
 }
